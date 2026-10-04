@@ -1,0 +1,11 @@
+Strict laws to regulate LLMs are the wrong solution to a real problem.
+
+Yes, LLMs can be misused. But that is true of nearly every powerful technology: the internet, smartphones, search engines, email, and even printing presses. We do not respond to risk by imposing sweeping legal restrictions on the tool itself; we respond by targeting harmful conduct. Fraud should be punished. Defamation should be punished. Data theft should be punished. That is enough. Creating strict, broad laws for LLMs would punish the technology, not the abuse.
+
+The biggest danger of strict regulation is that it would freeze innovation in the hands of only the largest corporations and governments. Compliance costs, licensing regimes, and legal uncertainty sound safe in theory, but in practice they create barriers that small developers, researchers, and startups cannot overcome. The result is not safer AI — it is less competition, fewer breakthroughs, and more power concentrated in a few huge players who can afford the red tape.
+
+Strict laws also age badly. LLMs are evolving rapidly, and rigid legal rules will be outdated almost as soon as they are written. When the law is too specific, it becomes obsolete; when it is too broad, it becomes a blunt instrument that stifles beneficial uses like education, accessibility, translation, coding assistance, and medical support. We should not lock a fast-moving field into outdated legal boxes.
+
+Most importantly, strict laws create a false sense of security. No law can fully prevent bad actors from using models maliciously, especially when open-source tools and global access exist. The smarter approach is flexible, harm-based regulation: enforce existing laws against misuse, require transparency where appropriate, and let standards evolve with the technology.
+
+So the choice is not between safety and chaos. The choice is between targeted, adaptable oversight and heavy-handed regulation that slows progress, entrenches monopolies, and still fails to stop abuse. For that reason, there should not be strict laws to regulate LLMs.

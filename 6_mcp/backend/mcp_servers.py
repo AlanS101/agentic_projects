@@ -16,7 +16,11 @@ TIMEOUT = 120
 if massive_api_key:
     market_params = {
         "command": "uvx",
-        "args": ["--from", "git+https://github.com/massive-com/mcp_massive@v0.10.0", "mcp_massive"],
+        "args": [
+            "--from", "git+https://github.com/massive-com/mcp_massive@v0.10.0",
+            "--with", "mcp==1.27.0",
+            "mcp_massive",
+        ],
         "env": {"MASSIVE_API_KEY": massive_api_key},
     }
 else:
@@ -40,7 +44,7 @@ def researcher_mcp_servers(name: str) -> list[MCPServerStdio]:
     researcher reaches for plain search rather than its heavier crawl or deep-research tools.
     """
     fetch = MCPServerStdio(
-        {"command": "uvx", "args": ["mcp-server-fetch"]},
+        {"command": "uvx", "args": ["--with", "mcp==1.27.0", "mcp-server-fetch"]},
         client_session_timeout_seconds=TIMEOUT,
     )
     search = MCPServerStdio(
