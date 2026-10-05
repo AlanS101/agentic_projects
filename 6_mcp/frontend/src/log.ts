@@ -23,6 +23,7 @@ export class LogView {
     for (const row of rows) {
       const el = document.createElement("div");
       el.className = "log-row";
+      const isFinished = row.message === "TRADER FINISHED";
 
       const time = document.createElement("span");
       time.className = "log-time";
@@ -30,12 +31,17 @@ export class LogView {
 
       const type = document.createElement("span");
       type.className = "log-type";
-      type.style.color = row.color;
-      type.textContent = row.type;
+      type.style.color = isFinished ? "var(--blue)" : row.color;
+      type.textContent = isFinished ? "TRADER FINISHED" : row.type;
 
       const text = document.createElement("span");
       text.className = "log-text";
-      text.textContent = row.message;
+      if (isFinished) {
+        text.classList.add("log-finished");
+        text.textContent = row.message;
+      } else {
+        text.textContent = row.message;
+      }
 
       el.append(time, type, text);
       this.host.append(el);

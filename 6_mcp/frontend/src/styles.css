@@ -396,6 +396,12 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.log-finished {
+  color: var(--blue) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 
 /* ---- Bottom row: activity log + recent trades ---- */
 

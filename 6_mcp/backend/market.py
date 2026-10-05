@@ -5,9 +5,11 @@ so the whole trading floor still runs out of the box.
 """
 
 import os
+import time
 from dotenv import load_dotenv
 from massive import RESTClient
 from .market_simulator import simulated_price
+from .database import read_price_cache, write_price_cache
 
 load_dotenv(override=True)
 
@@ -33,14 +35,28 @@ price_methods = [_last_trade, _snapshot, _previous_close]
 plan_tier = 0
 
 
+def _cached_or_raise(symbol: str, error: Exception) -> float:
+    cached = read_price_cache(symbol)
+    if cached is not None:
+        print(f"Massive API unavailable ({error}); using cached price for {symbol}")
+        return cached
+    raise RuntimeError(f"No real price available for {symbol}") from error
+
+
 def get_share_price(symbol: str) -> float:
-    """Return the current price for a symbol, from Massive or the simulator."""
-    if massive_api_key:
-        try:
-            return get_share_price_massive(symbol)
-        except Exception as e:
-            print(f"Massive API unavailable ({e}); using a simulated price")
-    return simulated_price(symbol)
+    """Return a share price. Simulator only when no Massive key is configured."""
+    if not massive_api_key:
+        return simulated_price(symbol)
+    if not is_market_open():
+        cached = read_price_cache(symbol)
+        if cached is not None:
+            return cached
+    try:
+        price = get_share_price_massive(symbol)
+        write_price_cache(symbol, price)
+        return price
+    except Exception as e:
+        return _cached_or_raise(symbol, e)
 
 
 def get_share_price_massive(symbol: str) -> float:
@@ -57,12 +73,23 @@ def get_share_price_massive(symbol: str) -> float:
     raise RuntimeError(f"No Massive price available for {symbol}")
 
 
+_status_cache: tuple[float, bool] | None = None
+STATUS_TTL_SECONDS = 60
+
+
 def is_market_open() -> bool:
-    """Whether the US market is open; True on simulated data or if Massive is unreachable."""
+    """Whether the US market is open. A status error means closed, not open."""
+    global _status_cache
     if not massive_api_key:
         return True
+    now = time.monotonic()
+    if _status_cache and now - _status_cache[0] < STATUS_TTL_SECONDS:
+        return _status_cache[1]
     try:
         client = RESTClient(massive_api_key)
-        return client.get_market_status().market == "open"
-    except Exception:
-        return True
+        opened = client.get_market_status().market == "open"
+    except Exception as e:
+        print(f"Market status unavailable ({e}); treating the market as closed")
+        opened = False
+    _status_cache = (now, opened)
+    return opened

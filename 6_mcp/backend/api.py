@@ -24,6 +24,7 @@ LOG_COLORS = {
     "generation": "#dddd00",
     "response": "#aa00dd",
     "account": "#dd0000",
+    "trader_finished": "#209dd7",
 }
 DEFAULT_LOG_COLOR = "#87CEEB"
 
@@ -47,7 +48,7 @@ def holdings_detail(account: Account) -> list[dict]:
     """Current holdings enriched with price, market value and unrealised profit."""
     details = []
     for symbol, quantity in account.holdings.items():
-        price = market.get_share_price(symbol)
+        price = account.price_for_valuation(symbol)
         cost = average_cost(account, symbol)
         details.append(
             {

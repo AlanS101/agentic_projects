@@ -2,12 +2,12 @@ from pydantic import BaseModel
 import json
 from dotenv import load_dotenv
 from datetime import datetime
-from .market import get_share_price
-from .database import write_account, read_account, write_log
+from .market import get_share_price, is_market_open
+from .database import write_account, read_account, write_log, write_price_cache
 
 load_dotenv(override=True)
 
-INITIAL_BALANCE = 10_000.0
+INITIAL_BALANCE = 15_000.0
 SPREAD = 0.002
 
 
@@ -97,6 +97,7 @@ class Account(BaseModel):
         # Update balance
         self.balance -= total_cost
         self.save()
+        write_price_cache(symbol, buy_price)
         write_log(self.name, "account", f"Bought {quantity} of {symbol}")
         return "Completed. Latest details:\n" + self.report()
 
@@ -123,14 +124,31 @@ class Account(BaseModel):
         # Update balance
         self.balance += total_proceeds
         self.save()
+        write_price_cache(symbol, sell_price)
         write_log(self.name, "account", f"Sold {quantity} of {symbol}")
         return "Completed. Latest details:\n" + self.report()
+
+    def average_buy_price(self, symbol: str) -> float | None:
+        """Average fill paid for this symbol, including the spread."""
+        bought = sum(t.quantity for t in self.transactions if t.symbol == symbol and t.quantity > 0)
+        if not bought:
+            return None
+        spend = sum(t.price * t.quantity for t in self.transactions if t.symbol == symbol and t.quantity > 0)
+        return spend / bought
+
+    def price_for_valuation(self, symbol: str) -> float:
+        """Closed market: what the shares cost. Open market: a live quote."""
+        if not is_market_open():
+            cost = self.average_buy_price(symbol)
+            if cost:
+                return cost
+        return get_share_price(symbol)
 
     def calculate_portfolio_value(self):
         """ Calculate the total value of the user's portfolio. """
         total_value = self.balance
         for symbol, quantity in self.holdings.items():
-            total_value += get_share_price(symbol) * quantity
+            total_value += self.price_for_valuation(symbol) * quantity
         return total_value
 
     def calculate_profit_loss(self, portfolio_value: float):
@@ -150,11 +168,23 @@ class Account(BaseModel):
         """ List all transactions made by the user. """
         return [transaction.model_dump() for transaction in self.transactions]
     
+    def record_portfolio_snapshot(self) -> float:
+        """Append one portfolio value point (turn start/end)."""
+        portfolio_value = self.calculate_portfolio_value()
+        self.portfolio_value_time_series.append(
+            (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), portfolio_value)
+        )
+        self.save()
+        return portfolio_value
+
     def report(self) -> str:
         """ Return a json string representing the account.  """
         portfolio_value = self.calculate_portfolio_value()
-        self.portfolio_value_time_series.append((datetime.now().strftime("%Y-%m-%d %H:%M:%S"), portfolio_value))
-        self.save()
+        if is_market_open():
+            self.portfolio_value_time_series.append(
+                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), portfolio_value)
+            )
+            self.save()
         pnl = self.calculate_profit_loss(portfolio_value)
         data = self.model_dump()
         data["total_portfolio_value"] = portfolio_value

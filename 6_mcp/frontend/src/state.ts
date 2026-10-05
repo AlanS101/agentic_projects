@@ -32,7 +32,10 @@ export class TraderState {
       this.chart = detail.time_series.map((p) => ({ t: toUnixSeconds(p.datetime), value: p.value }));
       this.seeded = true;
     }
-    this.chart.push({ t: Date.now() / 1000, value: detail.portfolio_value });
+    const last = this.chart[this.chart.length - 1];
+    if (!last || last.value !== detail.portfolio_value) {
+      this.chart.push({ t: Date.now() / 1000, value: detail.portfolio_value });
+    }
     if (this.chart.length > CHART_MAX_POINTS) {
       this.chart.splice(0, this.chart.length - CHART_MAX_POINTS);
     }

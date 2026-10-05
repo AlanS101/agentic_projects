@@ -85,6 +85,12 @@ class Trader:
         response = ""
         for log in logs:
             timestamp, type, message = log
+            if message == "TRADER FINISHED":
+                response += (
+                    f"<span style='color:{Color.BLUE.value};font-weight:bold'>"
+                    f"{timestamp} : TRADER FINISHED</span><br/>"
+                )
+                continue
             color = mapper.get(type, Color.WHITE).value
             response += f"<span style='color:{color}'>{timestamp} : [{type}] {message}</span><br/>"
         response = f"<div style='height:250px; overflow-y:auto;'>{response}</div>"
