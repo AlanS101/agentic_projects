@@ -14,6 +14,9 @@ from .templates import (
     research_tool,
 )
 from .mcp_servers import trader_mcp_servers, researcher_mcp_servers
+from .accounts import Account
+from .market import is_market_open
+from .database import write_log
 
 load_dotenv(override=True)
 
@@ -121,4 +124,9 @@ class Trader:
             await self.run_with_trace()
         except Exception as e:
             print(f"Error running trader {self.name}: {e}")
+        finally:
+            account = Account.get(self.name)
+            if not is_market_open():
+                account.record_portfolio_snapshot()
+            write_log(self.name, "trader_finished", "TRADER FINISHED")
         self.do_trade = not self.do_trade
